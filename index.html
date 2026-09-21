@@ -8,15 +8,16 @@
 <title>台股技術／籌碼分析工具（純網頁版）</title>
 <style>
   * { box-sizing: border-box; }
+  :root { color-scheme: dark; }
   body {
     font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
-    background: #f5f7fb;
-    color: #333;
+    background: #0e1320;          /* 深藍灰背景，沉穩耐看 */
+    color: #d7dce4;              /* 柔和淺灰文字，長時間看不刺眼 */
     margin: 0;
     padding: 0;
     -webkit-text-size-adjust: 100%;   /* 避免 iOS 橫置時字體被自動放大 */
     text-size-adjust: 100%;
-    -webkit-tap-highlight-color: rgba(45,106,191,.15);
+    -webkit-tap-highlight-color: rgba(66,120,189,.2);
   }
   .wrap {
     max-width: 980px; margin: 0 auto;
@@ -26,42 +27,46 @@
     padding-right: max(16px, env(safe-area-inset-right));
   }
   .title-banner {
-    background: linear-gradient(135deg,#1a3a6b,#2d6abf);
-    color: white; padding: 22px 26px; border-radius: 12px; margin-bottom: 18px;
+    background: linear-gradient(135deg,#16233b,#26426a);
+    color: #eef3fb; padding: 22px 26px; border-radius: 12px; margin-bottom: 18px;
+    border: 1px solid #2b3b57;
   }
   .title-banner h1 { margin: 0; font-size: 22px; }
-  .title-banner p { margin: 6px 0 0; font-size: 13px; color: rgba(255,255,255,.85); }
+  .title-banner p { margin: 6px 0 0; font-size: 13px; color: rgba(226,236,250,.72); }
 
   .card {
-    background: white; border: 1px solid #dde2f0; border-radius: 10px;
-    padding: 18px 20px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    background: #19202e; border: 1px solid #2a3346; border-radius: 10px;
+    padding: 18px 20px; margin: 16px 0; box-shadow: 0 1px 6px rgba(0,0,0,.35);
   }
-  .card h2 { margin: 0 0 12px; font-size: 17px; color: #1a3a6b; border-bottom: 2px solid #2d6abf; padding-bottom: 6px; }
-  .card h3 { margin: 14px 0 8px; font-size: 14px; color: #333; }
-  .caption { font-size: 12px; color: #888; margin: 4px 0 10px; }
+  .card h2 { margin: 0 0 12px; font-size: 17px; color: #8fb4e0; border-bottom: 2px solid #33507a; padding-bottom: 6px; }
+  .card h3 { margin: 14px 0 8px; font-size: 14px; color: #c4ccd8; }
+  .caption { font-size: 12px; color: #8b94a3; margin: 4px 0 10px; }
 
   .input-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   input[type=text], input[type=password] {
-    border: 1px solid #ccd3e0; border-radius: 8px; padding: 10px 12px;
+    border: 1px solid #333d52; border-radius: 8px; padding: 10px 12px;
     font-size: 16px;              /* ≥16px 才不會讓 iOS Safari 聚焦時自動放大 */
     flex: 1; min-width: 160px;
+    background: #121826; color: #e6eaf1;
     -webkit-appearance: none; appearance: none;
   }
+  input[type=text]::placeholder, input[type=password]::placeholder { color: #6b7484; }
+  input[type=text]:focus, input[type=password]:focus { outline: none; border-color: #4278bd; }
   button {
-    background: #2d6abf; color: white; border: none; border-radius: 8px;
+    background: #3566a3; color: #fff; border: none; border-radius: 8px;
     padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
   }
-  button:hover { background: #1a3a6b; }
-  button:disabled { background: #aab4c8; cursor: not-allowed; }
-  button.secondary { background: #7c3aed; }
-  button.secondary:hover { background: #5b21b6; }
+  button:hover { background: #4278bd; }
+  button:disabled { background: #39435a; color: #8c97ad; cursor: not-allowed; }
+  button.secondary { background: #5b64a8; }
+  button.secondary:hover { background: #6f79c0; }
 
   .score-card { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
   .score-badge {
     min-width: 150px; text-align: center; border-radius: 12px; padding: 18px;
-    border: 2px solid #ccc; background: white;
+    border: 2px solid #39435a; background: #141b28;
   }
-  .score-badge .label { font-size: 12px; color: #555; font-weight: 600; }
+  .score-badge .label { font-size: 12px; color: #9aa3b2; font-weight: 600; }
   .score-badge .grade { font-size: 42px; font-weight: 800; line-height: 1.1; }
   .score-badge .num { font-size: 20px; font-weight: 700; }
 
@@ -69,21 +74,21 @@
   .item-row { font-size: 13.5px; margin: 6px 0; }
   .item-row b { font-weight: 700; }
 
-  .ok-pass { background:#e8f5e9; border:2px solid #27ae60; color:#155724; padding:12px 14px; border-radius:8px; margin:10px 0; }
-  .not-rec { background:#fde8e8; border:2px solid #c02020; color:#c02020; padding:12px 14px; border-radius:8px; margin:10px 0; }
-  .info-box { background:#eef3ff; border:1.5px solid #2d6abf; padding:12px 14px; border-radius:8px; margin:10px 0; }
-  .chip-box { background:#f5f0ff; border:1.5px solid #7c3aed; padding:12px 14px; border-radius:8px; margin:10px 0; }
-  .warn-box { background:#fff8f0; border:1.5px solid #e67e22; padding:12px 14px; border-radius:8px; margin:10px 0; }
+  .ok-pass { background:#15251c; border:2px solid #2f8b5a; color:#a9e0be; padding:12px 14px; border-radius:8px; margin:10px 0; }
+  .not-rec { background:#2a1618; border:2px solid #b0484c; color:#f0b3b3; padding:12px 14px; border-radius:8px; margin:10px 0; }
+  .info-box { background:#152238; border:1.5px solid #3a5f93; color:#bccde8; padding:12px 14px; border-radius:8px; margin:10px 0; }
+  .chip-box { background:#1b2036; border:1.5px solid #586bab; color:#c6cbee; padding:12px 14px; border-radius:8px; margin:10px 0; }
+  .warn-box { background:#282013; border:1.5px solid #9a7a38; color:#e6cd93; padding:12px 14px; border-radius:8px; margin:10px 0; }
 
   .raw-data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; }
   @media (max-width: 640px) { .raw-data-grid { grid-template-columns: 1fr; } }
 
   table.inst-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
-  table.inst-table th, table.inst-table td { border: 1px solid #e2e7f2; padding: 7px 10px; text-align: right; }
-  table.inst-table th { background: #eef3ff; color: #1a3a6b; text-align: center; }
-  table.inst-table td.name { text-align: left; font-weight: 600; color: #333; }
-  .pos { color: #c02020; font-weight: 700; }
-  .neg { color: #27ae60; font-weight: 700; }
+  table.inst-table th, table.inst-table td { border: 1px solid #2a3346; padding: 7px 10px; text-align: right; }
+  table.inst-table th { background: #202a3d; color: #9fbde4; text-align: center; }
+  table.inst-table td.name { text-align: left; font-weight: 600; color: #d7dce4; }
+  .pos { color: #ec6a6a; font-weight: 700; }   /* 買超（紅） */
+  .neg { color: #57c088; font-weight: 700; }   /* 賣超（綠） */
 
   .chart-svg { width: 100%; height: auto; display: block; }
   .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -93,13 +98,13 @@
   .slider-row input[type=range] { flex: 1; }
 
   .spinner {
-    display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc;
-    border-top-color: #2d6abf; border-radius: 50%; animation: spin 0.8s linear infinite;
+    display: inline-block; width: 16px; height: 16px; border: 2px solid #39435a;
+    border-top-color: #4278bd; border-radius: 50%; animation: spin 0.8s linear infinite;
     vertical-align: middle; margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  footer { text-align: center; color: #aaa; font-size: 11px; margin-top: 30px; padding: 16px; border-top: 1px solid #eee; }
+  footer { text-align: center; color: #6b7382; font-size: 11px; margin-top: 30px; padding: 16px; border-top: 1px solid #2a3346; }
   .hidden { display: none !important; }
 
   /* ═══ 手機（iPhone 等窄螢幕）優化 ═══ */
@@ -739,7 +744,7 @@ function xLabelsSvg(dates, padT, plotH, plotW, step) {
     const i = Math.round(k * (n - 1) / (want - 1 || 1));
     const x = PAD.L + step * (i + 0.5);
     const d = dates[i].slice(5); // MM-DD
-    out += `<text x="${x.toFixed(1)}" y="${(padT + plotH + 16).toFixed(1)}" font-size="10" fill="#888" text-anchor="middle">${d}</text>`;
+    out += `<text x="${x.toFixed(1)}" y="${(padT + plotH + 16).toFixed(1)}" font-size="10" fill="#8b94a3" text-anchor="middle">${d}</text>`;
   }
   return out;
 }
@@ -771,8 +776,8 @@ function renderPriceChartSVG(full, sname) {
   // 格線 + y 軸標籤
   niceTicks(ymin, ymax, 5).forEach(t => {
     const yy = y(t);
-    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#eef1f6"/>`;
-    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#999" text-anchor="end">${t.toFixed(t < 50 ? 1 : 0)}</text>`;
+    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#252d3d"/>`;
+    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#7f8a9c" text-anchor="end">${t.toFixed(t < 50 ? 1 : 0)}</text>`;
   });
   // K 棒
   view.forEach((r, i) => {
@@ -792,14 +797,14 @@ function renderPriceChartSVG(full, sname) {
   svg += maLine(ma5, "#e6b800");
   svg += maLine(ma10, "#c026d3");
   svg += maLine(ma20, "#0891b2");
-  svg += maLine(ma60, "#92400e");
+  svg += maLine(ma60, "#c08a4a");
   // 標題 + 圖例
-  svg += `<text x="${W / 2}" y="20" font-size="14" fill="#1a3a6b" text-anchor="middle" font-weight="700">${esc(sname)} 近${viewN}個交易日 K線圖</text>`;
-  const legend = [["MA5", "#e6b800"], ["MA10", "#c026d3"], ["MA20", "#0891b2"], ["MA60", "#92400e"]];
+  svg += `<text x="${W / 2}" y="20" font-size="14" fill="#8fb4e0" text-anchor="middle" font-weight="700">${esc(sname)} 近${viewN}個交易日 K線圖</text>`;
+  const legend = [["MA5", "#e6b800"], ["MA10", "#c026d3"], ["MA20", "#0891b2"], ["MA60", "#c08a4a"]];
   let lx = PAD.L;
   legend.forEach(([nm, c]) => {
     svg += `<line x1="${lx}" y1="34" x2="${lx + 16}" y2="34" stroke="${c}" stroke-width="2.5"/>`;
-    svg += `<text x="${lx + 20}" y="37.5" font-size="10" fill="#555">${nm}</text>`;
+    svg += `<text x="${lx + 20}" y="37.5" font-size="10" fill="#9aa3b2">${nm}</text>`;
     lx += 62;
   });
   svg += xLabelsSvg(dates, padT, plotH, plotW, step);
@@ -817,11 +822,11 @@ function renderVolumeSVG(view, viewN, step) {
   const cx = i => PAD.L + step * (i + 0.5);
   const vmax = Math.max(...view.map(r => r.volume), 1);
   const cw = Math.max(1.5, step * 0.62);
-  let svg = `<text x="${PAD.L}" y="14" font-size="11" fill="#555">成交量（股）</text>`;
+  let svg = `<text x="${PAD.L}" y="14" font-size="11" fill="#9aa3b2">成交量（股）</text>`;
   niceTicks(0, vmax, 3).forEach(t => {
     const yy = padT + (1 - t / vmax) * plotH;
-    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#eef1f6"/>`;
-    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#999" text-anchor="end">${fmtNum(t)}</text>`;
+    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#252d3d"/>`;
+    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#7f8a9c" text-anchor="end">${fmtNum(t)}</text>`;
   });
   view.forEach((r, i) => {
     const up = r.close >= r.open;
@@ -846,10 +851,10 @@ function renderMacdSVG(full, s, viewN, step, dates) {
   const y = v => padT + (1 - (v - mn) / (mx - mn)) * plotH;
   const cw = Math.max(1, step * 0.5);
 
-  let svg = `<text x="${PAD.L}" y="14" font-size="11" fill="#555">MACD（DIF橘／DEA藍／柱狀）</text>`;
+  let svg = `<text x="${PAD.L}" y="14" font-size="11" fill="#9aa3b2">MACD（DIF橘／DEA藍／柱狀）</text>`;
   // 零軸
   const y0 = y(0);
-  svg += `<line x1="${PAD.L}" y1="${y0.toFixed(1)}" x2="${W - PAD.R}" y2="${y0.toFixed(1)}" stroke="#ccc" stroke-dasharray="3 3"/>`;
+  svg += `<line x1="${PAD.L}" y1="${y0.toFixed(1)}" x2="${W - PAD.R}" y2="${y0.toFixed(1)}" stroke="#46516a" stroke-dasharray="3 3"/>`;
   // 柱狀
   hist.forEach((v, i) => {
     if (v == null) return;
@@ -884,12 +889,12 @@ function renderWaveChartSVG(priceRows, wave, sname) {
   let svg = "";
   niceTicks(ymin, ymax, 5).forEach(t => {
     const yy = y(t);
-    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#eef1f6"/>`;
-    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#999" text-anchor="end">${t.toFixed(t < 50 ? 1 : 0)}</text>`;
+    svg += `<line x1="${PAD.L}" y1="${yy.toFixed(1)}" x2="${W - PAD.R}" y2="${yy.toFixed(1)}" stroke="#252d3d"/>`;
+    svg += `<text x="${PAD.L - 6}" y="${(yy + 3).toFixed(1)}" font-size="10" fill="#7f8a9c" text-anchor="end">${t.toFixed(t < 50 ? 1 : 0)}</text>`;
   });
   const closePts = closes.map((v, i) => `${cx(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  svg += `<polyline points="${closePts}" fill="none" stroke="#c7c7c7" stroke-width="1.2"/>`;
-  svg += `<text x="${W / 2}" y="20" font-size="14" fill="#1a3a6b" text-anchor="middle" font-weight="700">${esc(sname)} 近期轉折點與簡化波浪標記</text>`;
+  svg += `<polyline points="${closePts}" fill="none" stroke="#6b7482" stroke-width="1.2"/>`;
+  svg += `<text x="${W / 2}" y="20" font-size="14" fill="#8fb4e0" text-anchor="middle" font-weight="700">${esc(sname)} 近期轉折點與簡化波浪標記</text>`;
 
   if (wave.available) {
     const dateIdx = new Map(view.map((r, i) => [r.date, i]));
@@ -897,10 +902,10 @@ function renderWaveChartSVG(priceRows, wave, sname) {
       .filter(p => p.i !== null);
     if (pts.length) {
       const poly = pts.map(p => `${cx(p.i).toFixed(1)},${y(p.price).toFixed(1)}`).join(" ");
-      svg += `<polyline points="${poly}" fill="none" stroke="#7c3aed" stroke-width="2"/>`;
+      svg += `<polyline points="${poly}" fill="none" stroke="#8f78e0" stroke-width="2"/>`;
       pts.forEach(p => {
-        svg += `<circle cx="${cx(p.i).toFixed(1)}" cy="${y(p.price).toFixed(1)}" r="4" fill="#7c3aed"/>`;
-        svg += `<text x="${cx(p.i).toFixed(1)}" y="${(y(p.price) - 8).toFixed(1)}" font-size="11" fill="#5b21b6" text-anchor="middle" font-weight="700">${esc(p.label)}</text>`;
+        svg += `<circle cx="${cx(p.i).toFixed(1)}" cy="${y(p.price).toFixed(1)}" r="4" fill="#8f78e0"/>`;
+        svg += `<text x="${cx(p.i).toFixed(1)}" y="${(y(p.price) - 8).toFixed(1)}" font-size="11" fill="#bca9ee" text-anchor="middle" font-weight="700">${esc(p.label)}</text>`;
       });
     }
   }
@@ -925,14 +930,14 @@ function renderFxChartSVG(fx, sname) {
   const yc = v => padT + (1 - (v - cmin) / ((cmax - cmin) || 1)) * plotH;
   const yr = v => padT + (1 - (v - rmin) / ((rmax - rmin) || 1)) * plotH;
 
-  let svg = `<text x="${W / 2}" y="20" font-size="14" fill="#1a3a6b" text-anchor="middle" font-weight="700">${esc(sname)} 收盤價 vs 美元/新台幣（走勢對照，各自縮放）</text>`;
+  let svg = `<text x="${W / 2}" y="20" font-size="14" fill="#8fb4e0" text-anchor="middle" font-weight="700">${esc(sname)} 收盤價 vs 美元/新台幣（走勢對照，各自縮放）</text>`;
   const cPts = closes.map((v, i) => `${cx(i).toFixed(1)},${yc(v).toFixed(1)}`).join(" ");
   const rPts = rates.map((v, i) => `${cx(i).toFixed(1)},${yr(v).toFixed(1)}`).join(" ");
   svg += `<polyline points="${cPts}" fill="none" stroke="#c02020" stroke-width="1.6"/>`;
   svg += `<polyline points="${rPts}" fill="none" stroke="#2d6abf" stroke-width="1.6"/>`;
   // 圖例
-  svg += `<line x1="${PAD.L}" y1="34" x2="${PAD.L + 16}" y2="34" stroke="#c02020" stroke-width="2.5"/><text x="${PAD.L + 20}" y="37.5" font-size="10" fill="#555">${esc(sname)}收盤</text>`;
-  svg += `<line x1="${PAD.L + 120}" y1="34" x2="${PAD.L + 136}" y2="34" stroke="#2d6abf" stroke-width="2.5"/><text x="${PAD.L + 140}" y="37.5" font-size="10" fill="#555">USD/TWD</text>`;
+  svg += `<line x1="${PAD.L}" y1="34" x2="${PAD.L + 16}" y2="34" stroke="#c02020" stroke-width="2.5"/><text x="${PAD.L + 20}" y="37.5" font-size="10" fill="#9aa3b2">${esc(sname)}收盤</text>`;
+  svg += `<line x1="${PAD.L + 120}" y1="34" x2="${PAD.L + 136}" y2="34" stroke="#2d6abf" stroke-width="2.5"/><text x="${PAD.L + 140}" y="37.5" font-size="10" fill="#9aa3b2">USD/TWD</text>`;
   svg += xLabelsSvg(dates, padT, plotH, plotW, step);
   document.getElementById("fxDiv").innerHTML =
     `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="${svgNS}">${svg}</svg>`;
